@@ -210,10 +210,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (request.params.name) {
       case "create_workflow": {
         const { name, nodes, connections } = request.params.arguments as any;
-
+        
         // Generate unique IDs for nodes using crypto
         const crypto = await import('crypto');
-
+        
         const workflow = {
           name,
           nodes: nodes.map((node: any) => ({
@@ -229,11 +229,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             executionOrder: "v1"
           },
           staticData: null,
-          tags: [],
         };
 
         const response = await api.post("/workflows", workflow);
-
+        
         return {
           content: [
             {
@@ -368,10 +367,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "update_workflow": {
         const { workflow_id, name, nodes, connections } = request.params.arguments as any;
-
+        
         // First, get the existing workflow
         const existing = await api.get(`/workflows/${workflow_id}`);
-
+        
         // Merge updates with existing data
         const workflow = {
           ...existing.data,
@@ -379,10 +378,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           nodes: nodes || existing.data.nodes,
           connections: connections || existing.data.connections,
         };
-
+        
         // Use PUT to update the entire workflow
         const response = await api.put(`/workflows/${workflow_id}`, workflow);
-
+        
         return {
           content: [
             {
