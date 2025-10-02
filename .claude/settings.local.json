@@ -9,7 +9,9 @@
       "Bash(npm run build:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Read(//c/Users/shann/AppData/Roaming/Claude/**)"
+      "Read(//c/Users/shann/AppData/Roaming/Claude/**)",
+      "Bash(git ls-tree:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

@@ -210,25 +210,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (request.params.name) {
       case "create_workflow": {
         const { name, nodes, connections } = request.params.arguments as any;
-        
+
+        // Generate unique IDs for nodes using crypto
+        const crypto = await import('crypto');
+
         const workflow = {
           name,
-          nodes: nodes.map((node: any, index: number) => ({
-            id: `node_${index}`,
+          nodes: nodes.map((node: any) => ({
+            id: crypto.randomUUID(),
             name: node.name,
             type: node.type,
-            typeVersion: 1,
-            position: node.position || [250 + index * 200, 300],
+            typeVersion: node.typeVersion || 1,
+            position: node.position || [250, 300],
             parameters: node.parameters || {},
           })),
           connections: connections || {},
-          active: false,
-          settings: {},
+          settings: {
+            executionOrder: "v1"
+          },
+          staticData: null,
           tags: [],
         };
 
         const response = await api.post("/workflows", workflow);
-        
+
         return {
           content: [
             {
@@ -363,14 +368,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case "update_workflow": {
         const { workflow_id, name, nodes, connections } = request.params.arguments as any;
-        
-        const updates: any = {};
-        if (name) updates.name = name;
-        if (nodes) updates.nodes = nodes;
-        if (connections) updates.connections = connections;
-        
-        const response = await api.patch(`/workflows/${workflow_id}`, updates);
-        
+
+        // First, get the existing workflow
+        const existing = await api.get(`/workflows/${workflow_id}`);
+
+        // Merge updates with existing data
+        const workflow = {
+          ...existing.data,
+          name: name || existing.data.name,
+          nodes: nodes || existing.data.nodes,
+          connections: connections || existing.data.connections,
+        };
+
+        // Use PUT to update the entire workflow
+        const response = await api.put(`/workflows/${workflow_id}`, workflow);
+
         return {
           content: [
             {
