@@ -7,6 +7,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import axios from "axios";
+import { randomUUID } from "crypto";
 
 const N8N_URL = process.env.N8N_URL || "https://cshannahan.app.n8n.cloud";
 const N8N_API_KEY = process.env.N8N_API_KEY || "";
@@ -211,13 +212,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "create_workflow": {
         const { name, nodes, connections } = request.params.arguments as any;
         
-        // Generate unique IDs for nodes using crypto
-        const crypto = await import('crypto');
-        
         const workflow = {
           name,
           nodes: nodes.map((node: any) => ({
-            id: crypto.randomUUID(),
+            id: randomUUID(),
             name: node.name,
             type: node.type,
             typeVersion: node.typeVersion || 1,
