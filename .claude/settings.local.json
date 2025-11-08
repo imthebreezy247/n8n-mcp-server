@@ -12,7 +12,11 @@
       "Read(//c/Users/shann/AppData/Roaming/Claude/**)",
       "Bash(git ls-tree:*)",
       "Bash(git add:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm install:*)",
+      "Bash(npm search:*)",
+      "Bash(node test-connection.js:*)",
+      "Bash(node test-mcp-server.js:*)"
     ],
     "deny": [],
     "ask": []
