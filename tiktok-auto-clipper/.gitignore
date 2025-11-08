@@ -1,0 +1,57 @@
+# Environment variables and secrets
+.env
+config/.env
+*.env.local
+
+# API Keys and credentials
+config/credentials.json
+*.key
+*.pem
+
+# Logs
+logs/*.log
+*.log
+npm-debug.log*
+
+# Video files
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+
+# Temporary files
+/tmp/
+temp/
+*.tmp
+
+# Node modules
+node_modules/
+package-lock.json
+
+# N8N data
+.n8n/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Build outputs
+dist/
+build/
+
+# Test files
+test-videos/
+sample-output/
+
+# Backup files
+*.bak
+backup/

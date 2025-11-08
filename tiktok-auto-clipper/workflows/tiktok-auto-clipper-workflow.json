@@ -1,0 +1,399 @@
+{
+  "name": "TikTok Auto Clipper - Movie Clips",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8,12,16,20,22 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule (5x Daily)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "",
+      "notes": "Triggers at 8am, 12pm, 4pm, 8pm, 10pm daily"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.themoviedb.org/3/movie/popular",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "queryAuth",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "={{ $env.TMDB_API_KEY }}"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "language",
+              "value": "en-US"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-popular-movies",
+      "name": "Get Popular Movies",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300],
+      "notes": "Fetches trending movies from TMDB"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter movies by rating and select high-quality content\nconst movies = $input.first().json.results;\n\n// Filter criteria\nconst filteredMovies = movies.filter(movie => {\n  return movie.vote_average >= 7.5 && \n         movie.popularity >= 100 &&\n         movie.overview.length > 50; // Ensure has good description\n});\n\n// Select a random movie from filtered list\nif (filteredMovies.length === 0) {\n  throw new Error('No suitable movies found matching criteria');\n}\n\nconst randomIndex = Math.floor(Math.random() * filteredMovies.length);\nconst selectedMovie = filteredMovies[randomIndex];\n\n// Return selected movie with metadata\nreturn [{\n  json: {\n    movie_id: selectedMovie.id,\n    title: selectedMovie.title,\n    overview: selectedMovie.overview,\n    rating: selectedMovie.vote_average,\n    popularity: selectedMovie.popularity,\n    release_date: selectedMovie.release_date,\n    poster_path: selectedMovie.poster_path,\n    backdrop_path: selectedMovie.backdrop_path,\n    selected_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "filter-select-movie",
+      "name": "Filter & Select Movie",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "notes": "Filters by rating and selects random movie"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.themoviedb.org/3/movie/{{ $json.movie_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "queryAuth",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "={{ $env.TMDB_API_KEY }}"
+            },
+            {
+              "name": "append_to_response",
+              "value": "videos,credits,keywords"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-movie-details",
+      "name": "Get Movie Details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 300],
+      "notes": "Fetches full movie details including cast, keywords"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate clip parameters for video processing\nconst movieData = $input.first().json;\nconst previousData = $node[\"Filter & Select Movie\"].json;\n\n// Determine clip timing (2 minutes)\n// In production, this would use scene detection or pre-defined interesting moments\nconst clipDuration = 120; // 2 minutes in seconds\n\n// Generate multiple potential clip start times (would normally use AI/ML)\n// For now, generate random start times from different parts of typical movie\nconst potentialStartTimes = [\n  300,  // 5 minutes in (opening scene)\n  1800, // 30 minutes in (setup complete)\n  3600, // 1 hour in (midpoint action)\n  5400  // 1.5 hours in (climax building)\n];\n\nconst randomStart = potentialStartTimes[Math.floor(Math.random() * potentialStartTimes.length)];\n\n// Extract genres for hashtags\nconst genres = movieData.genres ? movieData.genres.map(g => g.name.toLowerCase()) : [];\n\n// Extract main cast (top 3)\nconst mainCast = movieData.credits && movieData.credits.cast \n  ? movieData.credits.cast.slice(0, 3).map(actor => actor.name)\n  : [];\n\n// Extract keywords\nconst keywords = movieData.keywords && movieData.keywords.keywords\n  ? movieData.keywords.keywords.slice(0, 5).map(k => k.name)\n  : [];\n\nreturn [{\n  json: {\n    // Movie info\n    movie_id: previousData.movie_id,\n    title: movieData.title || previousData.title,\n    overview: movieData.overview || previousData.overview,\n    tagline: movieData.tagline || '',\n    \n    // Clip parameters\n    clip_start_time: randomStart,\n    clip_duration: clipDuration,\n    clip_end_time: randomStart + clipDuration,\n    \n    // Metadata for TikTok\n    genres: genres,\n    main_cast: mainCast,\n    keywords: keywords,\n    rating: movieData.vote_average,\n    release_year: movieData.release_date ? movieData.release_date.split('-')[0] : '',\n    \n    // Video file info (would come from your video storage)\n    // In production, you'd have the actual video file paths\n    video_source_url: `s3://movie-storage/${movieData.imdb_id || movieData.id}.mp4`,\n    \n    // Processing timestamp\n    processing_started: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "generate-clip-params",
+      "name": "Generate Clip Parameters",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300],
+      "notes": "Determines which part of movie to clip"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.VIDEO_PROCESSING_SERVICE_URL }}/api/v1/clip",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"source_url\": \"{{ $json.video_source_url }}\",\n  \"start_time\": {{ $json.clip_start_time }},\n  \"duration\": {{ $json.clip_duration }},\n  \"output_format\": {\n    \"resolution\": \"1080x1920\",\n    \"aspect_ratio\": \"9:16\",\n    \"codec\": \"h264\",\n    \"format\": \"mp4\",\n    \"bitrate\": \"5000k\"\n  },\n  \"transformations\": [\n    \"crop_center\",\n    \"add_subtitles\",\n    \"enhance_audio\"\n  ],\n  \"metadata\": {\n    \"movie_title\": \"{{ $json.title }}\",\n    \"clip_id\": \"{{ $json.movie_id }}_{{ $json.clip_start_time }}\"\n  }\n}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "process-video-clip",
+      "name": "Process Video Clip",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 300],
+      "notes": "Calls video processing service (Cloudinary, FFmpeg, etc)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate engaging TikTok caption with hashtags\nconst clipData = $input.first().json;\n\n// Create caption\nconst title = clipData.title || 'Movie Clip';\nconst year = clipData.release_year || '';\nconst tagline = clipData.tagline || '';\n\n// Generate description\nlet caption = `${title}`;\nif (year) caption += ` (${year})`;\nif (tagline) caption += `\\n\\n\"${tagline}\"`;\n\ncaption += `\\n\\nWhich scene is your favorite? Comment below!`;\n\n// Generate hashtags\nconst hashtags = [\n  '#movieclips',\n  '#cinema',\n  '#fyp',\n  '#viral',\n  '#movies',\n  '#film'\n];\n\n// Add genre-specific hashtags\nif (clipData.genres && clipData.genres.length > 0) {\n  clipData.genres.forEach(genre => {\n    hashtags.push(`#${genre.replace(/\\s+/g, '').toLowerCase()}`);\n  });\n}\n\n// Add movie title hashtag\nconst titleHashtag = title.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();\nhashtags.push(`#${titleHashtag}`);\n\n// Limit to 10 hashtags\nconst finalHashtags = [...new Set(hashtags)].slice(0, 10);\n\n// Combine caption and hashtags\nconst fullCaption = `${caption}\\n\\n${finalHashtags.join(' ')}`;\n\n// Prepare TikTok post data\nreturn [{\n  json: {\n    ...clipData,\n    tiktok_caption: fullCaption,\n    hashtags: finalHashtags,\n    caption_length: fullCaption.length,\n    video_url: clipData.processed_video_url || clipData.video_url,\n    thumbnail_url: clipData.thumbnail_url || clipData.poster_path\n  }\n}];"
+      },
+      "id": "generate-caption",
+      "name": "Generate Caption & Hashtags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 300],
+      "notes": "Creates engaging TikTok description"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $env.DRY_RUN_MODE }}",
+              "operation": "notEquals",
+              "value2": "true"
+            }
+          ]
+        }
+      },
+      "id": "check-dry-run",
+      "name": "Check Dry Run Mode",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1650, 300],
+      "notes": "Skip actual posting in dry run mode"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open-api.tiktok.com/share/video/upload/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.TIKTOK_ACCESS_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"video\": {\n    \"video_url\": \"{{ $json.video_url }}\",\n    \"caption\": \"{{ $json.tiktok_caption }}\",\n    \"privacy_level\": \"PUBLIC_TO_EVERYONE\",\n    \"disable_comment\": false,\n    \"disable_duet\": false,\n    \"disable_stitch\": false\n  }\n}",
+        "options": {}
+      },
+      "id": "post-to-tiktok",
+      "name": "Post to TikTok",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1850, 200],
+      "notes": "Uploads video to TikTok via API"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log successful execution\nconst data = $input.first().json;\n\nconst logEntry = {\n  timestamp: new Date().toISOString(),\n  status: 'success',\n  movie_title: data.title,\n  movie_id: data.movie_id,\n  clip_start: data.clip_start_time,\n  clip_duration: data.clip_duration,\n  tiktok_post_id: data.share_id || 'unknown',\n  caption_preview: data.tiktok_caption ? data.tiktok_caption.substring(0, 100) : '',\n  hashtags_used: data.hashtags ? data.hashtags.length : 0\n};\n\nconsole.log('TikTok post successful:', logEntry);\n\nreturn [{ json: logEntry }];"
+      },
+      "id": "log-success",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2050, 200],
+      "notes": "Logs successful post"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simulate posting for dry run mode\nconst data = $input.first().json;\n\nconst dryRunLog = {\n  timestamp: new Date().toISOString(),\n  status: 'dry_run',\n  mode: 'DRY RUN - NO ACTUAL POST',\n  movie_title: data.title,\n  movie_id: data.movie_id,\n  caption: data.tiktok_caption,\n  video_url: data.video_url,\n  message: 'This post would be made in production mode'\n};\n\nconsole.log('DRY RUN MODE:', dryRunLog);\n\nreturn [{ json: dryRunLog }];"
+      },
+      "id": "dry-run-log",
+      "name": "Dry Run Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 400],
+      "notes": "Logs dry run execution"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"TikTok Auto Clipper - Success\",\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*New TikTok Post Created*\\n\\n*Movie:* {{ $json.title }}\\n*Rating:* {{ $json.rating }}/10\\n*Clip Duration:* 2 minutes\\n*Hashtags:* {{ $json.hashtags_used }}\\n*Status:* Posted successfully\"\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "success-notification",
+      "name": "Success Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [2250, 200],
+      "notes": "Sends success notification to Slack"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"TikTok Auto Clipper - Error\",\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Error in TikTok Auto Clipper*\\n\\n*Error:* {{ $json.error.message }}\\n*Node:* {{ $json.error.node }}\\n*Time:* {{ $now.toISO() }}\"\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "error-notification",
+      "name": "Error Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1450, 500],
+      "notes": "Sends error notification"
+    },
+    {
+      "parameters": {},
+      "id": "error-trigger",
+      "name": "On Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [1250, 500],
+      "notes": "Catches any workflow errors"
+    }
+  ],
+  "connections": {
+    "Schedule (5x Daily)": {
+      "main": [
+        [
+          {
+            "node": "Get Popular Movies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Popular Movies": {
+      "main": [
+        [
+          {
+            "node": "Filter & Select Movie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter & Select Movie": {
+      "main": [
+        [
+          {
+            "node": "Get Movie Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Movie Details": {
+      "main": [
+        [
+          {
+            "node": "Generate Clip Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Clip Parameters": {
+      "main": [
+        [
+          {
+            "node": "Process Video Clip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Video Clip": {
+      "main": [
+        [
+          {
+            "node": "Generate Caption & Hashtags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Caption & Hashtags": {
+      "main": [
+        [
+          {
+            "node": "Check Dry Run Mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Dry Run Mode": {
+      "main": [
+        [
+          {
+            "node": "Post to TikTok",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dry Run Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post to TikTok": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Success": {
+      "main": [
+        [
+          {
+            "node": "Success Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Error Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "id": "tiktok-automation",
+      "name": "TikTok"
+    },
+    {
+      "id": "video-processing",
+      "name": "Video"
+    }
+  ],
+  "pinData": {},
+  "versionId": "1.0.0",
+  "triggerCount": 1,
+  "active": false
+}

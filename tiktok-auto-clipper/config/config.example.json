@@ -1,0 +1,56 @@
+{
+  "project": {
+    "name": "TikTok Auto Clipper",
+    "version": "1.0.0",
+    "description": "Automated video clip creation and posting to TikTok"
+  },
+  "apis": {
+    "tmdb": {
+      "api_key": "YOUR_TMDB_API_KEY_HERE",
+      "base_url": "https://api.themoviedb.org/3",
+      "note": "Get your API key from https://www.themoviedb.org/settings/api"
+    },
+    "tiktok": {
+      "client_key": "YOUR_TIKTOK_CLIENT_KEY_HERE",
+      "client_secret": "YOUR_TIKTOK_CLIENT_SECRET_HERE",
+      "access_token": "YOUR_TIKTOK_ACCESS_TOKEN_HERE",
+      "note": "Apply for TikTok API access at https://developers.tiktok.com/"
+    },
+    "video_processing": {
+      "service": "cloudinary_or_custom",
+      "api_key": "YOUR_VIDEO_SERVICE_API_KEY_HERE",
+      "api_secret": "YOUR_VIDEO_SERVICE_SECRET_HERE",
+      "cloud_name": "YOUR_CLOUD_NAME_HERE",
+      "note": "Options: Cloudinary, AWS MediaConvert, FFmpeg service, or custom"
+    }
+  },
+  "workflow_settings": {
+    "posts_per_day": 5,
+    "clip_duration_seconds": 120,
+    "video_format": {
+      "resolution": "1080x1920",
+      "aspect_ratio": "9:16",
+      "format": "mp4",
+      "codec": "h264"
+    },
+    "content_selection": {
+      "min_rating": 7.5,
+      "min_popularity": 100,
+      "genres": ["action", "drama", "comedy", "thriller", "sci-fi"],
+      "exclude_genres": ["horror", "documentary"]
+    },
+    "posting_schedule": {
+      "times": ["08:00", "12:00", "16:00", "20:00", "22:00"],
+      "timezone": "America/New_York"
+    },
+    "hashtags": {
+      "default": ["#movieclips", "#cinema", "#viral", "#fyp", "#movies"],
+      "max_hashtags": 10
+    }
+  },
+  "legal": {
+    "WARNING": "USING COPYRIGHTED CONTENT WITHOUT PERMISSION IS ILLEGAL",
+    "fair_use_disclaimer": "Ensure you have rights to use content or qualify for fair use",
+    "content_id_check": "Check if content is claimed on TikTok before posting"
+  }
+}

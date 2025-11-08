@@ -1,0 +1,185 @@
+================================================================================
+                    TIKTOK AUTO CLIPPER - GET STARTED
+================================================================================
+
+Project Location: /home/user/n8n-mcp-server/tiktok-auto-clipper
+
+================================================================================
+QUICK START (15 MINUTES)
+================================================================================
+
+1. READ THE LEGAL DISCLAIMER
+   → File: docs/LEGAL.md
+   → IMPORTANT: Using copyrighted content without permission is ILLEGAL
+
+2. GET TMDB API KEY (Free, 2 minutes)
+   → Visit: https://www.themoviedb.org/signup
+   → Go to Settings → API → Request API Key
+   → Choose "Developer" option
+
+3. CONFIGURE ENVIRONMENT
+   → cp config/.env.example config/.env
+   → Edit config/.env
+   → Add your TMDB_API_KEY
+   → Set DRY_RUN_MODE=true
+
+4. INSTALL DEPENDENCIES
+   → cd scripts
+   → npm install
+
+5. START VIDEO PROCESSOR
+   → node video-processor.js
+   → Keep this terminal running
+
+6. START N8N (new terminal)
+   → export TMDB_API_KEY=your_key_here
+   → export DRY_RUN_MODE=true
+   → n8n
+
+7. IMPORT WORKFLOW
+   → Open http://localhost:5678 in browser
+   → Click "Workflows" → "Import Workflow"
+   → Upload: workflows/tiktok-auto-clipper-workflow.json
+
+8. TEST IT
+   → Open imported workflow
+   → Click "Execute Workflow"
+   → Watch it run!
+
+================================================================================
+WHAT YOU GET
+================================================================================
+
+✓ Complete N8N workflow for TikTok automation
+✓ TMDB integration for movie discovery
+✓ FFmpeg-based video processing
+✓ Automatic caption generation with hashtags
+✓ Scheduling (5 posts per day)
+✓ Error handling and notifications
+✓ Comprehensive documentation
+
+================================================================================
+IMPORTANT FILES
+================================================================================
+
+START HERE:
+  → docs/QUICK-START.md       - 15-minute setup guide
+  → docs/LEGAL.md             - Legal warnings (READ THIS!)
+  → PROJECT-SUMMARY.md        - Complete project overview
+
+CONFIGURATION:
+  → config/.env.example       - Environment variables template
+  → config/config.example.json - Workflow settings template
+
+WORKFLOW:
+  → workflows/tiktok-auto-clipper-workflow.json - Import this into N8N!
+
+DOCUMENTATION:
+  → docs/API-SETUP.md         - How to configure all APIs
+  → docs/TROUBLESHOOTING.md   - Common issues and fixes
+  → docs/ARCHITECTURE.md      - Technical deep-dive
+
+SCRIPTS:
+  → scripts/video-processor.js - Video processing service
+  → scripts/setup.sh          - Automated setup
+
+================================================================================
+WORKFLOW OVERVIEW
+================================================================================
+
+Schedule (5x/day) → Get Movies → Filter → Select → Get Details
+                                                        ↓
+                                           Generate Clip Parameters
+                                                        ↓
+                                            Process Video (FFmpeg)
+                                                        ↓
+                                          Generate Caption & Hashtags
+                                                        ↓
+                                              Dry Run Check
+                                                ↓          ↓
+                                         Post TikTok    Log Only
+                                                ↓
+                                        Success Notification
+
+================================================================================
+SAFETY FEATURES
+================================================================================
+
+✓ DRY_RUN_MODE - Test without posting
+✓ Error handling with Slack notifications
+✓ Execution logging and history
+✓ Manual execution for testing
+✓ Copyright warnings throughout
+
+================================================================================
+BEFORE GOING TO PRODUCTION
+================================================================================
+
+LEGAL:
+  [ ] Read docs/LEGAL.md completely
+  [ ] Consult with a lawyer
+  [ ] Obtain licenses for all content
+  [ ] OR use only public domain content
+
+TECHNICAL:
+  [ ] Test workflow in dry run mode
+  [ ] Apply for TikTok Developer account
+  [ ] Set up video storage (S3 or local)
+  [ ] Configure OAuth credentials
+  [ ] Set up monitoring/notifications
+
+COMPLIANCE:
+  [ ] Understand copyright implications
+  [ ] Ensure fair use compliance (if applicable)
+  [ ] Review TikTok terms of service
+  [ ] Implement content vetting process
+
+================================================================================
+COST ESTIMATE
+================================================================================
+
+FREE SETUP (Testing):
+  → N8N: Self-hosted (free)
+  → TMDB API: Free
+  → FFmpeg: Free (open source)
+  → Total: $0/month
+
+PRODUCTION (Estimated):
+  → N8N: $0 (self-hosted) or $20-50/month (cloud)
+  → Video Storage: $5-10/month (S3, 50GB)
+  → Video Processing: $0 (self-hosted) or $20-50/month (cloud)
+  → Server: $10-50/month (if cloud)
+  → Total: $35-160/month OR $0/month (fully self-hosted)
+
+================================================================================
+SUPPORT
+================================================================================
+
+Documentation:  All files in docs/ folder
+N8N Docs:       https://docs.n8n.io/
+N8N Community:  https://community.n8n.io/
+TMDB API:       https://developers.themoviedb.org/
+TikTok API:     https://developers.tiktok.com/
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Read docs/QUICK-START.md for detailed setup
+2. Get TMDB API key
+3. Test workflow in dry run mode
+4. Read docs/LEGAL.md for legal information
+5. Plan your content strategy
+6. Apply for TikTok API access
+
+================================================================================
+
+⚠️  REMEMBER: This is for EDUCATIONAL PURPOSES ONLY
+    Using copyrighted content without permission is ILLEGAL
+    You are responsible for ensuring legal compliance
+
+================================================================================
+
+Ready to start? Open docs/QUICK-START.md
+
+================================================================================
