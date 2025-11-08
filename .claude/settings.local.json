@@ -17,7 +17,8 @@
       "Bash(npm search:*)",
       "Bash(node test-connection.js:*)",
       "Bash(node test-mcp-server.js:*)",
-      "Bash(node create-movie-clips-workflow.js:*)"
+      "Bash(node create-movie-clips-workflow.js:*)",
+      "Bash(node test-api-key.js:*)"
     ],
     "deny": [],
     "ask": []
