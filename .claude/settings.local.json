@@ -18,7 +18,12 @@
       "Bash(node test-connection.js:*)",
       "Bash(node test-mcp-server.js:*)",
       "Bash(node create-movie-clips-workflow.js:*)",
-      "Bash(node test-api-key.js:*)"
+      "Bash(node test-api-key.js:*)",
+      "Bash(if [ -f \".env\" ])",
+      "Bash(then cat .env)",
+      "Bash(else echo \"File does not exist\")",
+      "Bash(fi)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
