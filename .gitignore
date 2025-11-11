@@ -3,6 +3,10 @@
 .env.local
 .env.*.local
 
+# Test files that may contain sensitive data
+test-*.js
+*-test.js
+
 # Dependencies
 node_modules/
 

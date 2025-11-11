@@ -9,12 +9,17 @@
     "start": "node build/index.js",
     "dev": "tsc && node build/index.js"
   },
-  "keywords": ["n8n", "mcp", "automation"],
+  "keywords": [
+    "n8n",
+    "mcp",
+    "automation"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
-    "axios": "^1.7.9"
+    "axios": "^1.7.9",
+    "dotenv": "^17.2.3"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
